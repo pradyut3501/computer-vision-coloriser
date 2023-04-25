@@ -196,7 +196,7 @@ def main():
         optimizer=model.optimizer,
         loss=model.loss_fn,
         # TODO: Change metric here
-        metrics=[thresholded_loss])
+        metrics=[thresholded_metric])
 
     if ARGS.evaluate:
         test(model, datasets.test_data)
@@ -204,7 +204,7 @@ def main():
     else:
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
-def thresholded_loss(y_true, y_pred):
+def thresholded_metric(y_true, y_pred):
     threshold = 20
     true_flatten = y_true.reshape(-1,3)
     pred_flatten = y_pred.reshape(-1,3)
