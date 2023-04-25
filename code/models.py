@@ -12,20 +12,16 @@ from keras.layers import \
 import hyperparameters as hp
 
 
-class YourModel(tf.keras.Model):
+class CNNModel(tf.keras.Model):
     """ Your own neural network model. """
 
     def __init__(self):
-        super(YourModel, self).__init__()
+        super(CNNModel, self).__init__()
 
         self.optimizer = tf.keras.optimizers.SGD()
 
         self.architecture = [
-              Conv2D(32, 3, 1, activation="relu", padding="same"), MaxPool2D(2, padding="same"),
-              Conv2D(64, 3, 1, activation="relu", padding="same"), MaxPool2D(2, padding="same"),
-              Conv2D(128, 3, 1, activation="relu", padding="same"), MaxPool2D(2, padding="same"),
-              Flatten(), Dropout(0.5),
-              Dense(128, activation="relu"),Dense(64, activation="relu"), Dense(hp.num_classes, activation="softmax")
+              Conv2D(32, 3, 1, activation="relu", padding="same"), MaxPool2D(2, padding="same")
         ]
 
     def call(self, x):
@@ -39,5 +35,31 @@ class YourModel(tf.keras.Model):
     @staticmethod
     def loss_fn(labels, predictions):
         """ Loss function for the model. """
+        #TODO: find new loss function
+        return tf.keras.losses.MeanSquaredError(labels, predictions)
+    
+class GANModel(tf.keras.Model):
+    """ Your own neural network model. """
 
-        return tf.keras.losses.sparse_categorical_crossentropy(labels, predictions)
+    def __init__(self):
+        super(GANModel, self).__init__()
+
+        self.optimizer = tf.keras.optimizers.SGD()
+
+        self.architecture = [
+              Conv2D(32, 3, 1, activation="relu", padding="same"), MaxPool2D(2, padding="same")
+        ]
+
+    def call(self, x):
+        """ Passes input image through the network. """
+
+        for layer in self.architecture:
+            x = layer(x)
+
+        return x
+
+    @staticmethod
+    def loss_fn(labels, predictions):
+        """ Loss function for the model. """
+        #TODO: find new loss function
+        return tf.keras.losses.MeanSquaredError(labels, predictions)

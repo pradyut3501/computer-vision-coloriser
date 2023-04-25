@@ -12,7 +12,7 @@ from datetime import datetime
 import tensorflow as tf
 
 import hyperparameters as hp
-from models import YourModel, VGGModel
+from models import CNNModel, GANModel
 from preprocess import Datasets
 from skimage.transform import resize
 from tensorboard_utils import \
@@ -140,10 +140,11 @@ def main():
     # Run script from location of run.py
     os.chdir(sys.path[0])
 
+    #TODO: Check this again once we update preprocess
     datasets = Datasets(ARGS.data, ARGS.task)
 
     if ARGS.task == '1':
-        model = YourModel()
+        model = CNNModel()
         model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
         checkpoint_path = "checkpoints" + os.sep + \
             "your_model" + os.sep + timestamp + os.sep
@@ -152,6 +153,17 @@ def main():
 
         # Print summary of model
         model.summary()
+    elif ARGS.task == '2':
+        model = GANModel()
+        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+        checkpoint_path = "checkpoints" + os.sep + \
+            "your_model" + os.sep + timestamp + os.sep
+        logs_path = "logs" + os.sep + "your_model" + \
+            os.sep + timestamp + os.sep
+
+        # Print summary of model
+        model.summary()
+    '''
     else:
         model = VGGModel()
         checkpoint_path = "checkpoints" + os.sep + \
@@ -166,10 +178,11 @@ def main():
 
         # Load base of VGG model
         model.vgg16.load_weights(ARGS.load_vgg, by_name=True)
+    '''
 
     # Load checkpoints
     if ARGS.load_checkpoint is not None:
-        if ARGS.task == '1':
+        if ARGS.task == '1' or ARGS.task == '2':
             model.load_weights(ARGS.load_checkpoint, by_name=False)
         else:
             model.head.load_weights(ARGS.load_checkpoint, by_name=False)
@@ -183,7 +196,7 @@ def main():
         optimizer=model.optimizer,
         loss=model.loss_fn,
         # TODO: Change metric here
-        metrics=["sparse_categorical_accuracy"])
+        metrics=[thresholded_loss])
 
     if ARGS.evaluate:
         test(model, datasets.test_data)
@@ -191,6 +204,15 @@ def main():
     else:
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
+def thresholded_loss(y_true, y_pred):
+    threshold = 20
+    true_flatten = y_true.reshape(-1,3)
+    pred_flatten = y_pred.reshape(-1,3)
+    diff = pred_flatten - true_flatten
+    dist = np.linalg.norm(diff, axis=1)
+    successful_indices = np.where(dist < threshold, 1, 0)
+    prop = len(successful_indices) / len(true_flatten)
+    return prop
 
 # Make arguments global
 ARGS = parse_args()
