@@ -64,13 +64,13 @@ class Datasets():
 
     def store_data(self):
         all_rgb_imgs, all_gray_imgs = preprocess()
-        file = open(DATA_DIR + "/cleaned/pickled_data", "ab")
+        file = open(DATA_DIR + "/pickled_data", "ab")
         pickle.dump(all_rgb_imgs, file)
         pickle.dump(all_gray_imgs, file)
         file.close()
 
     def load_data(self):
-        file = open(DATA_DIR + "/cleaned/pickled_data", "rb")
+        file = open(DATA_DIR + "/pickled_data", "rb")
         all_rgb_imgs = pickle.load(file)
         all_gray_imgs = pickle.load(file)
         file.close()
