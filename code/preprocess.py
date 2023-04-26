@@ -1,16 +1,53 @@
-"""
-Homework 5 - CNNs
-CS1430 - Computer Vision
-Brown University
-"""
-
 import os
 import random
+from skimage import io, img_as_ubyte
+from skimage.color import rgba2rgb, rgb2gray
+from tqdm import tqdm
 import numpy as np
-from PIL import Image
-import tensorflow as tf
+import pickle
 
-import hyperparameters as hp
+DATA_DIR = "../data"
+
+
+def get_unique_ids(part):
+    id_folders = os.listdir(DATA_DIR + "/raw/" + part)
+    rgb_imgs = []
+    gray_imgs = []
+
+    for id in tqdm(id_folders, total=len(id_folders)):
+        # Ignore hidden files
+        if not id.startswith("."):
+            all_faces = os.listdir(DATA_DIR + "/raw/" + part + "/" + id)
+            # Randomly choose image for identity
+            chosen_face = random.choice(all_faces)
+            chosen_face = io.imread(DATA_DIR + "/raw/" + part + "/" +
+                                    id + "/" + chosen_face)
+            # Convert image from RGBA to RGB and grayscale
+            rgb_face = rgba2rgb(chosen_face)
+            rgb_face = img_as_ubyte(rgb_face)
+            gray_face = rgb2gray(rgb_face)
+            gray_face = img_as_ubyte(gray_face)
+
+            rgb_imgs.append(rgb_face)
+            gray_imgs.append(gray_face)
+
+    print(f"Identities loaded: {len(rgb_imgs)}")
+    return rgb_imgs, gray_imgs
+
+
+def preprocess():
+    parts = ["part1", "part2", "part3"]
+    all_rgb_imgs = []
+    all_gray_imgs = []
+
+    for i, part in enumerate(parts):
+        print(f"Preprocessing part {i + 1}")
+        processed_rgb, processed_gray = get_unique_ids(part)
+        all_rgb_imgs += processed_rgb
+        all_gray_imgs += processed_gray
+
+    return np.array(all_rgb_imgs), np.array(all_gray_imgs)
+
 
 class Datasets():
     """ Class for containing the training and test sets as well as
@@ -18,213 +55,23 @@ class Datasets():
     for preprocessing.
     """
 
-    def __init__(self, data_path, task):
+    def __init__(self):
+        self.color_imgs, self.gray_imgs = self.load_data()
 
-        self.data_path = data_path
-        self.task = task
+        # TODO
+        self.train_data = None
+        self.test_data = None
 
-        # Dictionaries for (label index) <--> (class name)
-        self.idx_to_class = {}
-        self.class_to_idx = {}
+    def store_data(self):
+        all_rgb_imgs, all_gray_imgs = preprocess()
+        file = open(DATA_DIR + "/cleaned/pickled_data", "ab")
+        pickle.dump(all_rgb_imgs, file)
+        pickle.dump(all_gray_imgs, file)
+        file.close()
 
-        # For storing list of classes
-        self.classes = [""] * hp.num_classes
-
-        # Mean and std for standardization
-        self.mean = np.zeros((hp.img_size,hp.img_size,3))
-        self.std = np.ones((hp.img_size,hp.img_size,3))
-        self.calc_mean_and_std()
-
-        # Setup data generators
-        # These feed data to the training and testing routine based on the dataset
-        self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), task == '3', True, True)
-        self.test_data = self.get_data(
-            os.path.join(self.data_path, "test/"), task == '3', False, False)
-
-    def calc_mean_and_std(self):
-        """ Calculate mean and standard deviation of a sample of the
-        training dataset for standardization.
-
-        Arguments: none
-
-        Returns: none
-        """
-
-        # Get list of all images in training directory
-        file_list = []
-        for root, _, files in os.walk(os.path.join(self.data_path, "train/")):
-            for name in files:
-                if name.endswith(".jpg"):
-                    file_list.append(os.path.join(root, name))
-
-        # Shuffle filepaths
-        random.shuffle(file_list)
-
-        # Take sample of file paths
-        file_list = file_list[:hp.preprocess_sample_size]
-
-        # Allocate space in memory for images
-        data_sample = np.zeros(
-            (hp.preprocess_sample_size, hp.img_size, hp.img_size, 3))
-
-        # Import images
-        for i, file_path in enumerate(file_list):
-            img = Image.open(file_path)
-            img = img.resize((hp.img_size, hp.img_size))
-            img = np.array(img, dtype=np.float32)
-            img /= 255.
-
-            # Grayscale -> RGB
-            if len(img.shape) == 2:
-                img = np.stack([img, img, img], axis=-1)
-
-            data_sample[i] = img
-
-        for i in range(3):
-            image_datum = data_sample[:,:,i].flatten()
-            self.std[i] = np.std(image_datum)
-            self.mean[i] = np.mean(image_datum)
-
-        # ==========================================================
-
-        print("Dataset mean shape: [{0}, {1}, {2}]".format(
-            self.mean.shape[0], self.mean.shape[1], self.mean.shape[2]))
-
-        print("Dataset mean top left pixel value: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
-            self.mean[0,0,0], self.mean[0,0,1], self.mean[0,0,2]))
-
-        print("Dataset std shape: [{0}, {1}, {2}]".format(
-            self.std.shape[0], self.std.shape[1], self.std.shape[2]))
-
-        print("Dataset std top left pixel value: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
-            self.std[0,0,0], self.std[0,0,1], self.std[0,0,2]))
-
-    def standardize(self, img):
-        """ Function for applying standardization to an input image.
-
-        Arguments:
-            img - numpy array of shape (image size, image size, 3)
-
-        Returns:
-            img - numpy array of shape (image size, image size, 3)
-        """
-
-        img_mean_normalized = (img - self.mean)
-        img_final = img_mean_normalized / self.std      # replace this code
-
-        # =============================================================
-
-        return img_final
-
-    def preprocess_fn(self, img):
-        """ Preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
-        return img
-
-    def custom_preprocess_fn(self, img):
-        """ Custom preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
-
-        # EXTRA CREDIT:
-        # Write your own custom data augmentation procedure, creating
-        # an effect that cannot be achieved using the arguments of
-        # ImageDataGenerator. This can potentially boost your accuracy
-        # in the validation set. Note that this augmentation should
-        # only be applied to some input images, so make use of the
-        # 'random' module to make sure this happens. Also, make sure
-        # that ImageDataGenerator uses *this* function for preprocessing
-        # on augmented data.
-
-        if random.random() < 0.3:
-            img = img + tf.random.uniform(
-                (hp.img_size, hp.img_size, 1),
-                minval=-0.1,
-                maxval=0.1)
-
-        return img
-
-    def get_data(self, path, is_vgg, shuffle, augment):
-        """ Returns an image data generator which can be iterated
-        through for images and corresponding class labels.
-
-        Arguments:
-            path - Filepath of the data being imported, such as
-                   "../data/train" or "../data/test"
-            is_vgg - Boolean value indicating whether VGG preprocessing
-                     should be applied to the images.
-            shuffle - Boolean value indicating whether the data should
-                      be randomly shuffled.
-            augment - Boolean value indicating whether the data should
-                      be augmented or not.
-
-        Returns:
-            An iterable image-batch generator
-        """
-
-        if augment:
-            # TODO: Use the arguments of ImageDataGenerator()
-            #       to augment the data. Leave the
-            #       preprocessing_function argument as is unless
-            #       you have written your own custom preprocessing
-            #       function (see custom_preprocess_fn()).
-            #
-            # Documentation for ImageDataGenerator: https://bit.ly/2wN2EmK
-            #
-            # ============================================================
-
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn,
-                rotation_range=15,
-                width_shift_range=0.2,
-                height_shift_range=0.2,
-                validation_split=0.2)
-            print("augmented")
-
-            # ============================================================
-        else:
-            # Don't modify this
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn)
-
-        # VGG must take images of size 224x224
-        img_size = 224 if is_vgg else hp.img_size
-
-        classes_for_flow = None
-
-        # Make sure all data generators are aligned in label indices
-        if bool(self.idx_to_class):
-            classes_for_flow = self.classes
-
-        # Form image data generator from directory structure
-        data_gen = data_gen.flow_from_directory(
-            path,
-            target_size=(img_size, img_size),
-            class_mode='sparse',
-            batch_size=hp.batch_size,
-            shuffle=shuffle,
-            classes=classes_for_flow)
-
-        # Setup the dictionaries if not already done
-        if not bool(self.idx_to_class):
-            unordered_classes = []
-            for dir_name in os.listdir(path):
-                if os.path.isdir(os.path.join(path, dir_name)):
-                    unordered_classes.append(dir_name)
-
-            for img_class in unordered_classes:
-                self.idx_to_class[data_gen.class_indices[img_class]] = img_class
-                self.class_to_idx[img_class] = int(data_gen.class_indices[img_class])
-                self.classes[int(data_gen.class_indices[img_class])] = img_class
-
-        return data_gen
+    def load_data(self):
+        file = open(DATA_DIR + "/cleaned/pickled_data", "rb")
+        all_rgb_imgs = pickle.load(file)
+        all_gray_imgs = pickle.load(file)
+        file.close()
+        return all_rgb_imgs, all_gray_imgs

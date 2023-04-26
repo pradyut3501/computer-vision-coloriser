@@ -16,7 +16,7 @@ from models import CNNModel, GANModel
 from preprocess import Datasets
 from skimage.transform import resize
 from tensorboard_utils import \
-        ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
+    ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
 
 from skimage.io import imread
 from lime import lime_image
@@ -74,6 +74,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     """ Training routine. """
 
@@ -96,7 +97,8 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
         x=datasets.train_data,
         validation_data=datasets.test_data,
         epochs=hp.num_epochs,
-        batch_size=None,            # Required as None as we use an ImageDataGenerator; see preprocess.py get_data()
+        # Required as None as we use an ImageDataGenerator; see preprocess.py get_data()
+        batch_size=None,
         callbacks=callback_list,
         initial_epoch=init_epoch,
     )
@@ -140,8 +142,8 @@ def main():
     # Run script from location of run.py
     os.chdir(sys.path[0])
 
-    #TODO: Check this again once we update preprocess
-    datasets = Datasets(ARGS.data, ARGS.task)
+    # TODO: Check this again once we update preprocess
+    datasets = Datasets()
 
     if ARGS.task == '1':
         model = CNNModel()
@@ -204,15 +206,17 @@ def main():
     else:
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
+
 def thresholded_metric(y_true, y_pred):
     threshold = 20
-    true_flatten = y_true.reshape(-1,3)
-    pred_flatten = y_pred.reshape(-1,3)
+    true_flatten = y_true.reshape(-1, 3)
+    pred_flatten = y_pred.reshape(-1, 3)
     diff = pred_flatten - true_flatten
     dist = np.linalg.norm(diff, axis=1)
     successful_indices = np.where(dist < threshold, 1, 0)
     prop = len(successful_indices) / len(true_flatten)
     return prop
+
 
 # Make arguments global
 ARGS = parse_args()
