@@ -5,9 +5,9 @@ Brown University
 """
 
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
+from keras.optimizers import Adam
 from keras.layers import \
-       Conv2D, MaxPool2D, Dropout, Flatten, Dense
+       Conv2D, MaxPool2D, Dropout, Flatten, Dense, UpSampling2D
 
 import hyperparameters as hp
 
@@ -21,8 +21,9 @@ class CNNModel(tf.keras.Model):
         self.optimizer = tf.keras.optimizers.SGD()
 
         self.architecture = [
-              Conv2D(32, 3, 1, activation="relu", padding="same"), 
-              MaxPool2D(2, padding="same")
+              Conv2D(3, 3, 1, activation="relu", padding="same"), 
+              MaxPool2D(2, padding="same"),
+              UpSampling2D(size=(2, 2))
         ]
 
     def call(self, x):

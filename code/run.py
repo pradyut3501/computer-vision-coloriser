@@ -45,16 +45,18 @@ def train(model, datasets):
     """ Training routine. """
     model.compile(
         optimizer=model.optimizer,
-        loss=model.loss_fn,
+        loss=tf.keras.losses.MeanSquaredError(),
         metrics=["mean_squared_error"])
 
     color, gray = datasets.load_data()
-    color_val = color[:-10000]
-    gray_val = gray[:-10000]
-    color_train = color[-10000:]
-    gray_train = gray[-10000:]
+    # color_val = color[:-10000]
+    # gray_val = gray[:-10000]
+    # color_train = color[-10000:]
+    # gray_train = gray[-10000:]
+    color_train = color[:100]
+    gray_train = gray[:100]
 
-    print(color_val.shape, gray_val.shape, color_train.shape, gray_train.shape)
+    #print(color_val.shape, gray_val.shape, color_train.shape, gray_train.shape)
 
     print("Fit model on training data")
     history = model.fit(
@@ -65,7 +67,7 @@ def train(model, datasets):
         # We pass some validation for
         # monitoring validation loss and metrics
         # at the end of each epoch
-        validation_data=(gray_val, color_val),
+        #validation_data=(gray_val, color_val),
     )
 
     print(history.history)
@@ -85,7 +87,7 @@ def main():
 
     if ARGS.model == 'cnn':
         model = CNNModel()
-        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 1)))
 
         # Print summary of model
         model.summary()

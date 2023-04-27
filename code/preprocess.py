@@ -72,6 +72,9 @@ class Datasets():
     def load_data(self):
         file = open(DATA_DIR + "/pickled_data", "rb")
         all_rgb_imgs = pickle.load(file)
+        all_rgb_imgs = all_rgb_imgs.astype(float)
         all_gray_imgs = pickle.load(file)
+        all_gray_imgs = np.expand_dims(all_gray_imgs, axis=-1)
+        all_gray_imgs = all_gray_imgs.astype(float)
         file.close()
         return all_rgb_imgs, all_gray_imgs
