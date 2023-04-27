@@ -1,0 +1,13 @@
+**/.DS_Store/
+.vscode
+.idea
+**/__MACOSX/
+**.DS_Store
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+data
