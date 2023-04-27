@@ -34,11 +34,11 @@ class CNNModel(tf.keras.Model):
 
         return x
 
-    @staticmethod
-    def loss_fn(labels, predictions):
-        """ Loss function for the model. """
-        #TODO: find new loss function
-        return tf.keras.losses.MeanSquaredError(labels, predictions)
+    # @staticmethod
+    # def loss_fn(labels, predictions):
+    #     """ Loss function for the model. """
+    #     #TODO: find new loss function
+    #     return tf.keras.losses.MeanSquaredError(labels, predictions)
     
 class GANModel(tf.keras.Model):
     """ Your own neural network model. """
