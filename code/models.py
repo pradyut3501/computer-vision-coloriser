@@ -21,7 +21,8 @@ class CNNModel(tf.keras.Model):
         self.optimizer = tf.keras.optimizers.SGD()
 
         self.architecture = [
-              Conv2D(32, 3, 1, activation="relu", padding="same"), MaxPool2D(2, padding="same")
+              Conv2D(32, 3, 1, activation="relu", padding="same"), 
+              MaxPool2D(2, padding="same")
         ]
 
     def call(self, x):
