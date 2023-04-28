@@ -54,6 +54,15 @@ def parse_args():
         its checkpoint.''')
     return parser.parse_args()
 
+def thresholded_loss(y_true, y_pred):
+    threshold = 20
+    true_flatten = y_true.reshape(-1,3)
+    pred_flatten = y_pred.reshape(-1,3)
+    diff = pred_flatten - true_flatten
+    dist = np.linalg.norm(diff, axis=1)
+    successful_indices = np.where(dist < threshold, 1, 0)
+    prop = len(successful_indices) / len(true_flatten)
+    return prop
 
 def train(model, datasets, checkpoint_path, init_epoch):
     """ Training routine. """
@@ -149,7 +158,7 @@ def main():
     model.compile(
         optimizer=model.optimizer,
         loss=tf.keras.losses.MeanSquaredError(),
-        metrics=["mean_squared_error"])
+        metrics=["mean_squared_error", thresholded_loss])
 
     if ARGS.evaluate:
         test(model, datasets)
