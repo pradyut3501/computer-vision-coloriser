@@ -216,7 +216,7 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
         min_acc_file, max_acc_file, max_acc, num_weights = \
             self.scan_weight_files()
 
-        cur_acc = logs["val_sparse_categorical_accuracy"]
+        cur_acc = logs["mean_squared_error"]
 
         # Only save weights if test accuracy exceeds the previous best
         # weight file
@@ -224,7 +224,7 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
             save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
                 epoch, cur_acc)
 
-            if self.task == '1':
+            if self.task == 'cnn':
                 save_location = self.checkpoint_dir + os.sep + "your." + save_name
                 print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) EXCEEDED previous "
                        "maximum TEST accuracy.\nSaving checkpoint at {location}")

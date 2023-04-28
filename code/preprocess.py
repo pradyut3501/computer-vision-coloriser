@@ -7,7 +7,7 @@ import numpy as np
 import pickle
 
 DATA_DIR = "../data"
-
+NUM_IMAGES = 100 # Can be increased upto 99,000
 
 def get_unique_ids(part):
     id_folders = os.listdir(DATA_DIR + "/raw/" + part)
@@ -58,9 +58,21 @@ class Datasets():
     def __init__(self):
         self.color_imgs, self.gray_imgs = self.load_data()
 
-        # TODO
-        self.train_data = None
-        self.test_data = None
+        random_order = np.arange(NUM_IMAGES)
+        np.random.shuffle(random_order)
+
+        # Split 80: 10: 10
+        train = (int) (0.8 * NUM_IMAGES)
+        val = (int) (0.9 * NUM_IMAGES)
+        
+        self.train_gray = self.gray_imgs[random_order[:train]]
+        self.train_color = self.color_imgs[random_order[:train]]
+
+        self.validation_gray = self.gray_imgs[random_order[train:val]]
+        self.validation_color = self.color_imgs[random_order[train:val]]
+
+        self.test_gray = self.gray_imgs[random_order[val:]]
+        self.test_color = self.color_imgs[random_order[val:]]
 
     def store_data(self):
         all_rgb_imgs, all_gray_imgs = preprocess()
@@ -72,8 +84,11 @@ class Datasets():
     def load_data(self):
         file = open(DATA_DIR + "/pickled_data", "rb")
         all_rgb_imgs = pickle.load(file)
+        all_rgb_imgs = all_rgb_imgs[:NUM_IMAGES]
         all_rgb_imgs = all_rgb_imgs.astype(float)
+
         all_gray_imgs = pickle.load(file)
+        all_gray_imgs = all_gray_imgs[:NUM_IMAGES]
         all_gray_imgs = np.expand_dims(all_gray_imgs, axis=-1)
         all_gray_imgs = all_gray_imgs.astype(float)
         file.close()
