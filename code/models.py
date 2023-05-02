@@ -57,21 +57,28 @@ class RESCNNModel(tf.keras.Model):
         
         self.head = [
               # input size: (4, 4, 2048)
-              Conv2D(128, 3, padding="same"), 
+              Conv2D(256, 3, padding="same"), 
               BatchNormalization(),
               ReLU(),
               UpSampling2D(size=(7, 7)),
-              # (28, 28, 128)
+              # (28, 28, 256)
+              Conv2D(128, 3, padding="same"), 
+              BatchNormalization(),
+              ReLU(),
+              UpSampling2D(size=(2, 2)),
+              # (56, 56, 128)
               Conv2D(64, 3, padding="same"), 
               BatchNormalization(),
               ReLU(),
               UpSampling2D(size=(2, 2)),
-              # (56, 56, 64)
-              Conv2D(2, 3, padding="same"), 
+              # (112, 112, 64)
+              Conv2D(32, 3, padding="same"), 
               BatchNormalization(),
               ReLU(),
-              UpSampling2D(size=(2, 2)),
-              # (112, 112, 128)
+              # (112, 112, 32)
+              Conv2D(2, 3, padding="same"), 
+              ReLU(),
+              # (112, 112, 2)
         ]
 
         self.model = tf.keras.Sequential(name="RES")
