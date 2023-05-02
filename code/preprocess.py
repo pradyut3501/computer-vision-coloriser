@@ -8,7 +8,7 @@ import pickle
 import math
 
 DATA_DIR = "../data"
-TOTAL_LOADED = 1000  # Limit 99,990
+TOTAL_LOADED = 15000  # Limit 99,990
 
 
 def get_unique_ids(part):
