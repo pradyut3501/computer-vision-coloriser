@@ -12,7 +12,7 @@ from datetime import datetime
 import tensorflow as tf
 
 import hyperparameters as hp
-from models import CNNModel, GANModel
+from models import CNNModel, GANModel, RESCNNModel
 from preprocess import Datasets
 from skimage.transform import resize
 
@@ -20,6 +20,7 @@ from tensorboard_utils import \
         ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
 
 from skimage.io import imread
+from skimage.color import rgba2rgb, rgb2gray, rgb2lab, lab2rgb
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -77,8 +78,8 @@ def train(model, datasets, checkpoint_path, init_epoch):
 
     print("Fit model on training data")
     history = model.fit(
-        datasets.train_gray,
-        datasets.train_color,
+        datasets.train_L,
+        datasets.train_ab,
         batch_size=64,
         epochs=hp.num_epochs,
         callbacks=callback_list,
@@ -86,7 +87,7 @@ def train(model, datasets, checkpoint_path, init_epoch):
         # We pass some validation for
         # monitoring validation loss and metrics
         # at the end of each epoch
-        validation_data=(datasets.validation_gray, datasets.validation_color),
+        validation_data=(datasets.val_L, datasets.val_ab),
     )
 
     print(history.history)
@@ -95,12 +96,43 @@ def train(model, datasets, checkpoint_path, init_epoch):
 def test(model, datasets):
     """ Testing routine. """
     model.evaluate(
-        x=datasets.test_gray,
-        y=datasets.test_color,
+        x=datasets.test_L,
+        y=datasets.test_ab,
         verbose=1,
     )
     #print(model, test_data)
 
+def predict(model, datasets):
+    l_test = datasets.test_L[:5]
+    ab_test = datasets.test_ab[:5]
+
+    ab_model = model.predict(l_test)
+
+    for i in range(5):
+        # Print just L
+        L = l_test[i]
+        grey_channel = L[:,:,0]
+
+        real_LAB = np.concatenate((L,)*3, axis=-1)
+        real_LAB[:,:,1:] = ab_test[i]
+
+        predicted_LAB = np.concatenate((L,)*3, axis=-1)
+        predicted_LAB[:,:,1:] = ab_model[i]
+
+        real_RGB = lab2rgb(real_LAB)
+        pred_RGB = lab2rgb(predicted_LAB)
+
+        plt.imshow(grey_channel, cmap="gray")
+        plt.show()
+        plt.imshow(real_RGB)
+        plt.show()
+        plt.imshow(pred_RGB)
+        plt.show()
+
+
+
+        # Print real LAB
+        # Print predicted LAB
 
 def main():
     """ Main function. """
@@ -132,9 +164,10 @@ def main():
         model.summary()
     elif ARGS.model == 'cnn-pre':
         # pre-trained CNN
-        model = CNNModel()
+        model = RESCNNModel()
         model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 1)))
-
+        checkpoint_path = "checkpoints" + os.sep + \
+            "vgg_model" + os.sep + timestamp + os.sep
         # Print summary of model
         model.summary()
     elif ARGS.model == 'gan':
@@ -149,6 +182,8 @@ def main():
         if ARGS.model == 'cnn':
             model.load_weights(ARGS.load_checkpoint, by_name=False)
         # TODO: Add elif cases for other models
+        elif ARGS.model == 'cnn-pre':
+            model.head.load_weights(ARGS.load_checkpoint, by_name=False)
     
     # Make checkpoint directory if needed
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):
@@ -158,9 +193,10 @@ def main():
     model.compile(
         optimizer=model.optimizer,
         loss=tf.keras.losses.MeanSquaredError(),
-        metrics=["mean_squared_error", thresholded_loss])
+        metrics=["mean_squared_error"])
 
     if ARGS.evaluate:
+        predict(model, datasets)
         test(model, datasets)
     else:
         train(model, datasets, checkpoint_path, init_epoch)

@@ -220,7 +220,7 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
 
         # Only save weights if test accuracy exceeds the previous best
         # weight file
-        if cur_acc > max_acc:
+        if cur_acc < max_acc:
             save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
                 epoch, cur_acc)
 
@@ -253,8 +253,10 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
         """ Scans checkpoint directory to find current minimum and maximum
         accuracy weights files as well as the number of weights. """
 
-        min_acc = float('inf')
-        max_acc = 0
+        # min_acc = float('inf')
+        # max_acc = 0
+        min_acc = 0
+        max_acc = float('inf')
         min_acc_file = ""
         max_acc_file = ""
         num_weights = 0
