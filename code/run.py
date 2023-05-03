@@ -15,6 +15,8 @@ import hyperparameters as hp
 from models import CNNModel, GANModel, RESCNNModel
 from preprocess import Datasets
 from skimage.transform import resize
+from tensorflow.python.ops.numpy_ops import np_config
+np_config.enable_numpy_behavior()
 
 from tensorboard_utils import \
         ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
@@ -56,13 +58,21 @@ def parse_args():
     return parser.parse_args()
 
 def thresholded_loss(y_true, y_pred):
-    threshold = 20
-    true_flatten = y_true.reshape(-1,3)
-    pred_flatten = y_pred.reshape(-1,3)
+    threshold = 10
+    true_flatten = tf.reshape(y_true,(-1,2))
+    pred_flatten = tf.reshape(y_pred,(-1,2))
     diff = pred_flatten - true_flatten
-    dist = np.linalg.norm(diff, axis=1)
-    successful_indices = np.where(dist < threshold, 1, 0)
-    prop = len(successful_indices) / len(true_flatten)
+    dist = tf.math.sqrt(tf.math.add(tf.math.square(diff[:,0]),tf.math.square(diff[:,1])))
+    successful_indices = tf.where(dist < threshold, 1, 0)
+    y, indx, counts = tf.unique_with_counts(successful_indices)
+    counter = 0
+    index = 0
+    for i in y:
+        if i == 1:
+            index = counter
+        counter += 1
+    num_success = counts[index]
+    prop = num_success / len(true_flatten)
     return prop
 
 def train(model, datasets, checkpoint_path, init_epoch):
@@ -193,7 +203,7 @@ def main():
     model.compile(
         optimizer=model.optimizer,
         loss=tf.keras.losses.MeanSquaredError(),
-        metrics=["mean_squared_error"])
+        metrics=["mean_squared_error", thresholded_loss])
 
     if ARGS.evaluate:
         predict(model, datasets)
