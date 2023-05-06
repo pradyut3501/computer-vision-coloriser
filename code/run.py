@@ -132,7 +132,7 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
                    "maximum TEST accuracy.\nSaving checkpoint at {location}")
                   .format(e + 1, best_g_loss, location=save_location))
             # Only save weights of classification head of VGGModel
-            model.generator.save_weights(save_location)
+            model.generator.head.save_weights(save_location)
 
 
 def test(model, datasets):
@@ -230,7 +230,8 @@ def main():
         elif ARGS.model == 'cnn-pre':
             model.head.load_weights(ARGS.load_checkpoint, by_name=False)
         elif ARGS.model == "gan":
-            model.generator.load_weights(ARGS.load_checkpoint, by_name=False)
+            model.generator.head.load_weights(
+                ARGS.load_checkpoint, by_name=False)
 
     # Make checkpoint directory if needed
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):
