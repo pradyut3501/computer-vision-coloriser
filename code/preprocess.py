@@ -7,8 +7,9 @@ import numpy as np
 import pickle
 import math
 
-DATA_DIR = "../data"
-TOTAL_LOADED = 1000  # Limit 99,990
+#DATA_DIR = "../data"
+DATA_DIR = "../../drive/Shareddrives"
+TOTAL_LOADED = 10000  # Limit 99,990
 
 
 def get_unique_ids(part):
