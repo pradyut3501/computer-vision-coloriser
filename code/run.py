@@ -4,6 +4,13 @@ CS1430 - Computer Vision
 Brown University
 """
 
+from tqdm import tqdm
+import numpy as np
+from matplotlib import pyplot as plt
+from skimage.color import rgba2rgb, rgb2gray, rgb2lab, lab2rgb
+from skimage.io import imread
+from tensorboard_utils import \
+    ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
 import os
 import sys
 import argparse
@@ -17,14 +24,6 @@ from preprocess import Datasets
 from skimage.transform import resize
 from tensorflow.python.ops.numpy_ops import np_config
 np_config.enable_numpy_behavior()
-
-from tensorboard_utils import \
-        ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
-
-from skimage.io import imread
-from skimage.color import rgba2rgb, rgb2gray, rgb2lab, lab2rgb
-from matplotlib import pyplot as plt
-import numpy as np
 
 
 def parse_args():
@@ -57,12 +56,14 @@ def parse_args():
         its checkpoint.''')
     return parser.parse_args()
 
+
 def thresholded_loss(y_true, y_pred):
     threshold = 10
-    true_flatten = tf.reshape(y_true,(-1,2))
-    pred_flatten = tf.reshape(y_pred,(-1,2))
+    true_flatten = tf.reshape(y_true, (-1, 2))
+    pred_flatten = tf.reshape(y_pred, (-1, 2))
     diff = pred_flatten - true_flatten
-    dist = tf.math.sqrt(tf.math.add(tf.math.square(diff[:,0]),tf.math.square(diff[:,1])))
+    dist = tf.math.sqrt(tf.math.add(tf.math.square(
+        diff[:, 0]), tf.math.square(diff[:, 1])))
     successful_indices = tf.where(dist < threshold, 1, 0)
     y, indx, counts = tf.unique_with_counts(successful_indices)
     counter = 0
@@ -74,6 +75,7 @@ def thresholded_loss(y_true, y_pred):
     num_success = counts[index]
     prop = num_success / len(true_flatten)
     return prop
+
 
 def train(model, datasets, checkpoint_path, init_epoch):
     """ Training routine. """
@@ -103,6 +105,36 @@ def train(model, datasets, checkpoint_path, init_epoch):
     print(history.history)
 
 
+def train_gan(model, datasets, checkpoint_path, init_epoch):
+    best_g_loss = float('inf')
+    for e in range(init_epoch, hp.num_epochs):
+        print(f"Epoch {e + 1}")
+        total_g_loss = 0
+        total_d_loss = 0
+        for i in tqdm(range(0, len(datasets.train_L), hp.batch_size)):
+            if i + hp.batch_size < len(datasets.train_L):
+                L_batch = datasets.train_L[i:i + hp.batch_size]
+                ab_batch = datasets.train_ab[i:i + hp.batch_size]
+            else:
+                L_batch = datasets.train_L[i:]
+                ab_batch = datasets.train_ab[i:]
+
+            g_loss, d_loss = model.train_step(L_batch, ab_batch)
+            total_g_loss += g_loss
+            total_d_loss += d_loss
+        # Save checkpoint
+        if total_g_loss < best_g_loss:
+            best_g_loss = total_g_loss
+            save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
+                e, best_g_loss)
+            save_location = checkpoint_path + os.sep + "gen." + save_name
+            print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) EXCEEDED previous "
+                   "maximum TEST accuracy.\nSaving checkpoint at {location}")
+                  .format(e + 1, best_g_loss, location=save_location))
+            # Only save weights of classification head of VGGModel
+            model.generator.save_weights(save_location)
+
+
 def test(model, datasets):
     """ Testing routine. """
     model.evaluate(
@@ -111,6 +143,7 @@ def test(model, datasets):
         verbose=1,
     )
     #print(model, test_data)
+
 
 def predict(model, datasets):
     l_test = datasets.test_L[:5]
@@ -121,13 +154,13 @@ def predict(model, datasets):
     for i in range(5):
         # Print just L
         L = l_test[i]
-        grey_channel = L[:,:,0]
+        grey_channel = L[:, :, 0]
 
         real_LAB = np.concatenate((L,)*3, axis=-1)
-        real_LAB[:,:,1:] = ab_test[i]
+        real_LAB[:, :, 1:] = ab_test[i]
 
         predicted_LAB = np.concatenate((L,)*3, axis=-1)
-        predicted_LAB[:,:,1:] = ab_model[i]
+        predicted_LAB[:, :, 1:] = ab_model[i]
 
         real_RGB = lab2rgb(real_LAB)
         pred_RGB = lab2rgb(predicted_LAB)
@@ -139,10 +172,9 @@ def predict(model, datasets):
         plt.imshow(pred_RGB)
         plt.show()
 
-
-
         # Print real LAB
         # Print predicted LAB
+
 
 def main():
     """ Main function. """
@@ -182,10 +214,13 @@ def main():
         model.summary()
     elif ARGS.model == 'gan':
         model = GANModel()
-        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+        # model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 1)))
+        model.generator(tf.keras.Input(shape=(hp.img_size, hp.img_size, 1)))
+        checkpoint_path = "checkpoints" + os.sep + \
+            "gen_model" + os.sep + timestamp + os.sep
 
         # Print summary of model
-        model.summary()
+        # model.summary()
 
     # Load checkpoints
     if ARGS.load_checkpoint is not None:
@@ -194,22 +229,32 @@ def main():
         # TODO: Add elif cases for other models
         elif ARGS.model == 'cnn-pre':
             model.head.load_weights(ARGS.load_checkpoint, by_name=False)
-    
+        elif ARGS.model == "gan":
+            model.generator.load_weights(ARGS.load_checkpoint, by_name=False)
+
     # Make checkpoint directory if needed
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
 
     # TODO add options for non-CNN models
-    model.compile(
-        optimizer=model.optimizer,
-        loss=tf.keras.losses.MeanSquaredError(),
-        metrics=["mean_squared_error", thresholded_loss])
+    if ARGS.model != 'gan':
+        model.compile(
+            optimizer=model.optimizer,
+            loss=tf.keras.losses.MeanSquaredError(),
+            metrics=["mean_squared_error", thresholded_loss])
 
     if ARGS.evaluate:
-        predict(model, datasets)
-        test(model, datasets)
+        if ARGS.model != 'gan':
+            predict(model, datasets)
+            test(model, datasets)
+        else:
+            predict(model.generator, datasets)
+            test(model.generator, datasets)
     else:
-        train(model, datasets, checkpoint_path, init_epoch)
+        if ARGS.model != 'gan':
+            train(model, datasets, checkpoint_path, init_epoch)
+        else:
+            train_gan(model, datasets, checkpoint_path, init_epoch)
 
 
 # Make arguments global
