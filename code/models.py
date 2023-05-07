@@ -20,13 +20,83 @@ class CNNModel(tf.keras.Model):
     def __init__(self):
         super(CNNModel, self).__init__()
 
-        self.optimizer = tf.keras.optimizers.SGD()
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
         self.architecture = [
-            Conv2D(3, 3, 1, activation="relu", padding="same"),
-            MaxPool2D(2, padding="same"),
-            UpSampling2D(size=(2, 2))
+            Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=512, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=512, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=512, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+
+
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=2, kernel_size=(1, 1), activation='relu', padding='same'),
+
+
+            Flatten(),
+            Dense(units=512, activation="relu"),
+            Dense(units=112 * 112 * 2, activation="relu"),
+            tf.keras.layers.Reshape((112, 112, 2))
         ]
+
+        # self.architecture = [
+        #     Conv2D(16, (3,3), padding='same', strides=1,activation="relu"), 
+        #     Conv2D(32, (3,3), padding='same', strides=1,activation="relu"),
+        #     BatchNormalization(),
+        #     MaxPool2D(pool_size=(2,2),padding='same'),
+    
+        #     Conv2D(64, (3,3), padding='same', strides=1,activation="relu"),
+        #     BatchNormalization(),
+        #     MaxPool2D(pool_size=(2,2),padding='same'),
+
+        #     Conv2D(128, (3,3), padding='same', strides=1,activation="relu"),
+        #     BatchNormalization(),
+        #     Conv2D(256, (3,3), padding='same', strides=1,activation="relu"),
+        #     BatchNormalization(),
+    
+        #     UpSampling2D(size=(2, 2)),
+        #     Conv2D(128, (3,3), padding='same', strides=1,activation="relu"),
+        #     BatchNormalization(),
+
+        #     UpSampling2D(size=(2, 2)),
+        #     Conv2D(64, (3,3), padding='same', strides=1,activation="relu"),
+        #     BatchNormalization(),
+
+        #     Conv2D(64, (3,3), padding='same', strides=1,activation="relu"),
+        #     Conv2D(32, (3,3), padding='same', strides=1,activation="relu"),
+        #     Conv2D(2, (3,3), padding='same', strides=1,activation="tanh"),
+        # ]
 
     def call(self, x):
         """ Passes input image through the network. """
@@ -36,11 +106,10 @@ class CNNModel(tf.keras.Model):
 
         return x
 
-    # @staticmethod
-    # def loss_fn(labels, predictions):
-    #     """ Loss function for the model. """
-    #     #TODO: find new loss function
-    #     return tf.keras.losses.MeanSquaredError(labels, predictions)
+    @staticmethod
+    def loss_fn(labels, predictions):
+        """ Loss function for the model. """
+        return tf.keras.losses.MeanSquaredError(labels, predictions)
 
 
 class RESCNNModel(tf.keras.Model):
