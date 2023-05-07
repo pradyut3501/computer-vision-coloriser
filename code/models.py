@@ -99,7 +99,8 @@ class RESCNNModel(tf.keras.Model):
     def loss_fn(labels, predictions):
         """ Loss function for the model. """
         # TODO: find new loss function
-        return tf.keras.losses.MeanSquaredError(labels, predictions)
+        #return tf.keras.losses.MeanSquaredError(labels, predictions)
+        return tf.keras.losses.MeanAbsoluteError(labels, predictions)
 
 
 class GeneratorModel(tf.keras.Model):
@@ -167,7 +168,7 @@ class GANModel():
 
         self.generator.compile(
             optimizer=self.generator_opt,
-            loss=tf.keras.losses.MeanSquaredError(),
+            loss=tf.keras.losses.MeanAbsoluteError(),
             metrics=["mean_squared_error"])
 
     def make_generator_model(self):
@@ -249,7 +250,8 @@ class GANModel():
         return model
 
     def generator_loss(self, fake_out, real_out):
-        mse = tf.keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
+        #mse = tf.keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
+        mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
         return mse(fake_out, real_out)
 
     def discriminator_loss(self, real_out, fake_out):
