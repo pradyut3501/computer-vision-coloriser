@@ -70,33 +70,6 @@ class CNNModel(tf.keras.Model):
             tf.keras.layers.Reshape((112, 112, 2))
         ]
 
-        # self.architecture = [
-        #     Conv2D(16, (3,3), padding='same', strides=1,activation="relu"), 
-        #     Conv2D(32, (3,3), padding='same', strides=1,activation="relu"),
-        #     BatchNormalization(),
-        #     MaxPool2D(pool_size=(2,2),padding='same'),
-    
-        #     Conv2D(64, (3,3), padding='same', strides=1,activation="relu"),
-        #     BatchNormalization(),
-        #     MaxPool2D(pool_size=(2,2),padding='same'),
-
-        #     Conv2D(128, (3,3), padding='same', strides=1,activation="relu"),
-        #     BatchNormalization(),
-        #     Conv2D(256, (3,3), padding='same', strides=1,activation="relu"),
-        #     BatchNormalization(),
-    
-        #     UpSampling2D(size=(2, 2)),
-        #     Conv2D(128, (3,3), padding='same', strides=1,activation="relu"),
-        #     BatchNormalization(),
-
-        #     UpSampling2D(size=(2, 2)),
-        #     Conv2D(64, (3,3), padding='same', strides=1,activation="relu"),
-        #     BatchNormalization(),
-
-        #     Conv2D(64, (3,3), padding='same', strides=1,activation="relu"),
-        #     Conv2D(32, (3,3), padding='same', strides=1,activation="relu"),
-        #     Conv2D(2, (3,3), padding='same', strides=1,activation="tanh"),
-        # ]
 
     def call(self, x):
         """ Passes input image through the network. """
