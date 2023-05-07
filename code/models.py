@@ -108,7 +108,7 @@ class GeneratorModel(tf.keras.Model):
     def __init__(self):
         super(GeneratorModel, self).__init__()
 
-        self.optimizer = tf.keras.optimizers.Adam(1e-4)
+        self.optimizer = tf.keras.optimizers.Adam(1e-2)
 
         self.RES = tf.keras.applications.resnet50.ResNet50(
             include_top=False,
@@ -159,8 +159,8 @@ class GANModel():
 
     def __init__(self):
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy()
-        self.generator_opt = tf.keras.optimizers.Adam(1e-4)
-        self.discriminator_opt = tf.keras.optimizers.Adam(1e-4)
+        self.generator_opt = tf.keras.optimizers.Adam(1e-2)
+        self.discriminator_opt = tf.keras.optimizers.Adam(1e-2)
         # self.generator = self.make_generator_model()
         self.generator = GeneratorModel()
         self.discriminator = self.make_discriminator_model()
