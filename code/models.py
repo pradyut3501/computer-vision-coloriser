@@ -219,10 +219,32 @@ class GANModel():
         return x
 
     def make_discriminator_model(self):
-        model = tf.keras.Sequential()
-        model.add(Conv2D(256, 3, padding="same"))
-        model.add(Flatten())
-        model.add(Dense(1, activation="softmax"))
+        model = [
+            Conv2D(32, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
+            Conv2D(32, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(64, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
+            Conv2D(64, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
+            Conv2D(128, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
+            Conv2D(128, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
+            MaxPool2D(pool_size=(2, 2)),
+            Flatten(),
+            Dense(64, activation="relu"),
+            Dense(1, activation="softmax")
+        ]
+        model = tf.keras.Sequential(model)
 
         return model
 
