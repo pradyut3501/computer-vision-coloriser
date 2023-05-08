@@ -126,8 +126,13 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
         
         predictions = model.generator.predict(datasets.train_L)
 
-        thresh.append(thresholded_loss(predictions, datasets.train_ab))
-        mse.append(l2(predictions, datasets.train_ab))
+        cur_thresh = thresholded_loss(predictions, datasets.train_ab).numpy()
+        print(cur_thresh)
+        thresh.append(cur_thresh)
+
+        cur_mse = l2(predictions, datasets.train_ab).numpy()
+        print(cur_mse)
+        mse.append(cur_mse)
 
         for i in tqdm(range(0, len(datasets.train_L), hp.batch_size)):
             if i + hp.batch_size < len(datasets.train_L):
