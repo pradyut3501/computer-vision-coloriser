@@ -235,25 +235,20 @@ class GANModel():
             Conv2D(32, 3, padding="same"),
             BatchNormalization(),
             LeakyReLU(),
-            # Conv2D(32, 3, padding="same"),
-            # BatchNormalization(),
-            # LeakyReLU(),
             MaxPool2D(pool_size=(2, 2)),
             Conv2D(64, 3, padding="same"),
             BatchNormalization(),
             LeakyReLU(),
-            # Conv2D(64, 3, padding="same"),
-            # BatchNormalization(),
-            # ReLU(),
             Conv2D(128, 3, padding="same"),
             BatchNormalization(),
             LeakyReLU(),
-            # Conv2D(128, 3, padding="same"),
-            # BatchNormalization(),
-            # LeakyReLU(),
+            Conv2D(256, 3, padding="same"),
+            BatchNormalization(),
+            LeakyReLU(),
             MaxPool2D(pool_size=(2, 2)),
             Flatten(),
-            Dense(64, activation="relu"),
+            Dense(256, activation="leaky_relu"),
+            Dense(64, activation="leaky_relu"),
             Dense(1, activation="sigmoid")
         ]
         model = tf.keras.Sequential(model)
@@ -266,7 +261,7 @@ class GANModel():
         # Change to mean
         #mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
         l1 = tf.keras.losses.MeanAbsoluteError()
-        return l1(fake_out, real_out) + cross_entropy_loss
+        return (0.1 * l1(fake_out, real_out)) + cross_entropy_loss
 
     def discriminator_loss(self, real_out, fake_out):
         real_loss = self.cross_entropy(tf.ones_like(real_out), real_out)
