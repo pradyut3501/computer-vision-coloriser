@@ -268,10 +268,11 @@ class GANModel():
 
         return model
 
-    def generator_loss(self, fake_out, real_out, prob_fake):
+    @staticmethod
+    def generator_loss(fake_out, real_out, prob_fake):
         #mse = tf.keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
-        cross_entropy_loss = self.cross_entropy(tf.ones_like(prob_fake), prob_fake)
-        # Change to mean
+        cross_entropy = tf.keras.losses.BinaryCrossentropy()
+        cross_entropy_loss = cross_entropy(tf.ones_like(prob_fake), prob_fake)
         #mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
         l1 = tf.keras.losses.MeanAbsoluteError()
         l1 = l1(fake_out, real_out)
@@ -294,7 +295,7 @@ class GANModel():
             #prob_real = self.discriminator(real_LAB, training=True)
             prob_fake = self.discriminator(fake_LAB, training=True)
 
-            g_loss = self.generator_loss(fake_ab, ab_batch, prob_fake)
+            g_loss = GANModel.generator_loss(fake_ab, ab_batch, prob_fake)
 
         # Compute gradients
         g_grads = g_tape.gradient(g_loss, self.generator.trainable_variables)
