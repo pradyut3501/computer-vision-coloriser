@@ -124,7 +124,7 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
             g_loss = model.train_generator_step(L_batch, ab_batch)
             total_g_loss += g_loss
         
-        predictions =  model.predict(datasets.train_L)
+        predictions = model.generator.predict(datasets.train_L)
 
         thresh.append(thresholded_loss(predictions, datasets.train_ab))
         mse.append(l2(predictions, datasets.train_ab))
