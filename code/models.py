@@ -23,45 +23,60 @@ class CNNModel(tf.keras.Model):
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
         self.architecture = [
-            Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
-            Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding='same'),
-            BatchNormalization(),
-            MaxPool2D(pool_size=(2, 2)),
-            Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
             MaxPool2D(pool_size=(2, 2)),
-            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=128, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
-            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=128, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
             MaxPool2D(pool_size=(2, 2)),
-            Conv2D(filters=512, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
-            Conv2D(filters=512, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
-            Conv2D(filters=512, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=512, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=512, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=512, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
             MaxPool2D(pool_size=(2, 2)),
 
 
             UpSampling2D(size=(2, 2)),
-            Conv2D(filters=256, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
             UpSampling2D(size=(2, 2)),
-            Conv2D(filters=128, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=128, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
             UpSampling2D(size=(2, 2)),
-            Conv2D(filters=64, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
             UpSampling2D(size=(2, 2)),
-            Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same'),
+            Conv2D(filters=32, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
             BatchNormalization(),
-            Conv2D(filters=2, kernel_size=(1, 1), activation='relu', padding='same'),
+            Conv2D(filters=2, kernel_size=(1, 1),
+                   activation='relu', padding='same'),
 
 
             Flatten(),
@@ -69,7 +84,6 @@ class CNNModel(tf.keras.Model):
             Dense(units=112 * 112 * 2, activation="relu"),
             tf.keras.layers.Reshape((112, 112, 2))
         ]
-
 
     def call(self, x):
         """ Passes input image through the network. """
@@ -104,25 +118,24 @@ class RESCNNModel(tf.keras.Model):
             # input size: (4, 4, 2048)
             Conv2D(256, 3, padding="same"),
             BatchNormalization(),
-            ReLU(),
+            LeakyReLU(),
             UpSampling2D(size=(7, 7)),
             # (28, 28, 256)
             Conv2D(128, 3, padding="same"),
             BatchNormalization(),
-            ReLU(),
+            LeakyReLU(),
             UpSampling2D(size=(2, 2)),
             # (56, 56, 128)
             Conv2D(64, 3, padding="same"),
             BatchNormalization(),
-            ReLU(),
+            LeakyReLU(),
             UpSampling2D(size=(2, 2)),
             # (112, 112, 64)
             Conv2D(32, 3, padding="same"),
             BatchNormalization(),
-            ReLU(),
+            LeakyReLU(),
             # (112, 112, 32)
             Conv2D(2, 3, padding="same"),
-            ReLU(),
             # (112, 112, 2)
         ]
 
@@ -141,7 +154,7 @@ class RESCNNModel(tf.keras.Model):
     def loss_fn(labels, predictions):
         """ Loss function for the model. """
         # TODO: find new loss function
-        #return tf.keras.losses.MeanSquaredError(labels, predictions)
+        # return tf.keras.losses.MeanSquaredError(labels, predictions)
         return tf.keras.losses.MeanAbsoluteError(labels, predictions)
 
 
@@ -164,22 +177,22 @@ class GeneratorModel(tf.keras.Model):
             # input size: (4, 4, 2048)
             Conv2D(256, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
             UpSampling2D(size=(7, 7)),
             # (28, 28, 256)
             Conv2D(128, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
             UpSampling2D(size=(2, 2)),
             # (56, 56, 128)
             Conv2D(64, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
             UpSampling2D(size=(2, 2)),
             # (112, 112, 64)
             Conv2D(32, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
             # (112, 112, 32)
             Conv2D(2, 3, padding="same"),
             # (112, 112, 2)
@@ -213,6 +226,37 @@ class GANModel():
             loss=tf.keras.losses.MeanAbsoluteError(),
             metrics=["mean_squared_error"])
 
+    def make_generator_model(self):
+        # head = [
+        #     # input size: (4, 4, 2048)
+        #     Conv2D(256, 3, padding="same"),
+        #     BatchNormalization(),
+        #     ReLU(),
+        #     UpSampling2D(size=(7, 7)),
+        #     # (28, 28, 256)
+        #     Conv2D(128, 3, padding="same"),
+        #     BatchNormalization(),
+        #     ReLU(),
+        #     UpSampling2D(size=(2, 2)),
+        #     # (56, 56, 128)
+        #     Conv2D(64, 3, padding="same"),
+        #     BatchNormalization(),
+        #     ReLU(),
+        #     UpSampling2D(size=(2, 2)),
+        #     # (112, 112, 64)
+        #     Conv2D(32, 3, padding="same"),
+        #     BatchNormalization(),
+        #     ReLU(),
+        #     # (112, 112, 32)
+        #     Conv2D(2, 3, padding="same"),
+        #     ReLU(),
+        #     # (112, 112, 2)
+        # ]
+
+        # model = tf.keras.Sequential(head)
+        # return model
+        pass
+
     def make_resnet_model(self):
         RES = tf.keras.applications.resnet50.ResNet50(
             include_top=False,
@@ -234,35 +278,37 @@ class GANModel():
         model = [
             Conv2D(32, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
+            Conv2D(32, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
             MaxPool2D(pool_size=(2, 2)),
             Conv2D(64, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
+            Conv2D(64, 3, padding="same"),
+            BatchNormalization(),
+            ReLU(),
             Conv2D(128, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
-            Conv2D(256, 3, padding="same"),
+            ReLU(),
+            Conv2D(128, 3, padding="same"),
             BatchNormalization(),
-            LeakyReLU(),
+            ReLU(),
             MaxPool2D(pool_size=(2, 2)),
             Flatten(),
-            Dense(256, activation="leaky_relu"),
-            Dense(64, activation="leaky_relu"),
-            Dense(1, activation="sigmoid")
+            Dense(64, activation="relu"),
+            Dense(1, activation="softmax")
         ]
         model = tf.keras.Sequential(model)
 
         return model
 
-    def generator_loss(self, fake_out, real_out, prob_fake):
+    def generator_loss(self, fake_out, real_out):
         #mse = tf.keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
-        cross_entropy_loss = self.cross_entropy(tf.ones_like(prob_fake), prob_fake)
-        # Change to mean
-        #mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
-        l1 = tf.keras.losses.MeanAbsoluteError()
-        l1 = l1(fake_out, real_out)
-        return l1 + cross_entropy_loss
+        mse = tf.keras.losses.MeanAbsoluteError(
+            reduction='sum_over_batch_size')
+        return mse(fake_out, real_out)
 
     def discriminator_loss(self, real_out, fake_out):
         real_loss = self.cross_entropy(tf.ones_like(real_out), real_out)
@@ -270,94 +316,60 @@ class GANModel():
         total_loss = real_loss + fake_loss
 
         return total_loss
-    
-    def train_generator_step(self, L_batch, ab_batch):
-        with tf.GradientTape() as g_tape:
+
+    def train_step(self, L_batch, ab_batch):
+        with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
             fake_ab = self.generator(L_batch, training=True)
 
-            real_LAB = np.concatenate((L_batch, ab_batch), axis=-1)
-            fake_LAB = np.concatenate((L_batch, fake_ab), axis=-1)
+            # Display
+            # L = L_batch[0]
+            # fake_ab_img = fake_ab[0]
+            # real_ab_img = ab_batch[0]
 
-            #prob_real = self.discriminator(real_LAB, training=True)
-            prob_fake = self.discriminator(fake_LAB, training=True)
+            # base_LAB = np.concatenate((L,)*3, axis=-1)
+            # base_LAB[:, :, 1:] = real_ab_img
+            # real_RGB = lab2rgb(base_LAB)
 
-            g_loss = self.generator_loss(fake_ab, ab_batch, prob_fake)
+            # base_LAB[:, :, 1:] = fake_ab_img
+            # fake_RGB = lab2rgb(base_LAB)
 
-        # Compute gradients
-        g_grads = g_tape.gradient(g_loss, self.generator.trainable_variables)
+            # plt.imshow(L, cmap="gray")
+            # plt.show()
+            # plt.imshow(real_RGB)
+            # plt.show()
+            # plt.imshow(fake_RGB)
+            # plt.show()
+            #
 
-        # Optimize generator
-        self.generator_opt.apply_gradients(
-            zip(g_grads, self.generator.trainable_variables))
+            prob_real = self.discriminator(ab_batch, training=True)
+            prob_fake = self.discriminator(fake_ab, training=True)
 
-        return g_loss
-    
-    def train_discriminator_step(self, L_batch, ab_batch):
-        with tf.GradientTape() as d_tape:
-            fake_ab = self.generator(L_batch, training=True)
-
-            real_LAB = np.concatenate((L_batch, ab_batch), axis=-1)
-            fake_LAB = np.concatenate((L_batch, fake_ab), axis=-1)
-
-            prob_real = self.discriminator(real_LAB, training=True)
-            prob_fake = self.discriminator(fake_LAB, training=True)
-
+            g_loss = self.generator_loss(fake_ab, ab_batch)
             d_loss = self.discriminator_loss(prob_real, prob_fake)
 
         # Compute gradients
+        g_grads = g_tape.gradient(g_loss, self.generator.trainable_variables)
         d_grads = d_tape.gradient(
             d_loss, self.discriminator.trainable_variables)
 
-        # Optimize discriminator
+        # Optimize
+        self.generator_opt.apply_gradients(
+            zip(g_grads, self.generator.trainable_variables))
         self.discriminator_opt.apply_gradients(
             zip(d_grads, self.discriminator.trainable_variables))
 
-        return d_loss
-    
+        return g_loss, d_loss
 
-    # def train_step(self, L_batch, ab_batch):
-    #     with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
-    #         fake_ab = self.generator(L_batch, training=True)
+    # def call(self, x):
+    #     """ Passes input image through the network. """
 
-    #         real_LAB = np.concatenate((L_batch, ab_batch), axis=-1)
-    #         fake_LAB = np.concatenate((L_batch, fake_ab), axis=-1)
-    #         # Display
-    #         # L = L_batch[0]
-    #         # fake_ab_img = fake_ab[0]
-    #         # real_ab_img = ab_batch[0]
+    #     for layer in self.architecture:
+    #         x = layer(x)
 
-    #         # base_LAB = np.concatenate((L,)*3, axis=-1)
-    #         # base_LAB[:, :, 1:] = real_ab_img
-    #         # real_RGB = lab2rgb(base_LAB)
+    #     return x
 
-    #         # base_LAB[:, :, 1:] = fake_ab_img
-    #         # fake_RGB = lab2rgb(base_LAB)
-
-    #         # plt.imshow(L, cmap="gray")
-    #         # plt.show()
-    #         # plt.imshow(real_RGB)
-    #         # plt.show()
-    #         # plt.imshow(fake_RGB)
-    #         # plt.show()
-    #         #
-
-    #         # Train the generator and discriminator seperately
-    #         prob_real = self.discriminator(real_LAB, training=True)
-    #         prob_fake = self.discriminator(fake_LAB, training=True)
-
-    #         g_loss = self.generator_loss(fake_ab, ab_batch, prob_fake)
-    #         d_loss = self.discriminator_loss(prob_real, prob_fake)
-
-    #     # Compute gradients
-    #     g_grads = g_tape.gradient(g_loss, self.generator.trainable_variables)
-    #     d_grads = d_tape.gradient(
-    #         d_loss, self.discriminator.trainable_variables)
-
-    #     # Optimize
-    #     self.generator_opt.apply_gradients(
-    #         zip(g_grads, self.generator.trainable_variables))
-    #     self.discriminator_opt.apply_gradients(
-    #         zip(d_grads, self.discriminator.trainable_variables))
-
-    #     return g_loss, d_loss
-
+    # @staticmethod
+    # def loss_fn(labels, predictions):
+    #     """ Loss function for the model. """
+    #     # TODO: find new loss function
+    #     return tf.keras.losses.MeanSquaredError(labels, predictions)
