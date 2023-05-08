@@ -106,7 +106,10 @@ def train(model, datasets, checkpoint_path, init_epoch):
 
 
 def train_gan(model, datasets, checkpoint_path, init_epoch):
+    mse = []
+    thresh = []
     best_g_loss = float('inf')
+    l2 = tf.keras.losses.MeanSquaredError()
     for e in range(init_epoch, hp.num_epochs):
         print(f"Epoch {e + 1}")
         total_g_loss = 0
@@ -121,6 +124,11 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
             g_loss = model.train_generator_step(L_batch, ab_batch)
             total_g_loss += g_loss
         
+        predictions =  model.predict(datasets.train_L)
+
+        thresh.append(thresholded_loss(predictions, datasets.train_ab))
+        mse.append(l2(predictions, datasets.train_ab))
+
         for i in tqdm(range(0, len(datasets.train_L), hp.batch_size)):
             if i + hp.batch_size < len(datasets.train_L):
                 L_batch = datasets.train_L[i:i + hp.batch_size]
@@ -143,6 +151,8 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
             # Only save weights of classification head of VGGModel
             model.generator.head.save_weights(save_location)
 
+    print(mse)
+    print(thresh)
 
 def test(model, datasets):
     """ Testing routine. """
