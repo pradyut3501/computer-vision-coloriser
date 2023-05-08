@@ -261,7 +261,10 @@ class GANModel():
         # Change to mean
         #mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
         l1 = tf.keras.losses.MeanAbsoluteError()
-        return (0.1 * l1(fake_out, real_out)) + cross_entropy_loss
+        l1 = l1(fake_out, real_out)
+        print(cross_entropy_loss)
+        print(l1)
+        return (0.1 * l1) + cross_entropy_loss
 
     def discriminator_loss(self, real_out, fake_out):
         real_loss = self.cross_entropy(tf.ones_like(real_out), real_out)
