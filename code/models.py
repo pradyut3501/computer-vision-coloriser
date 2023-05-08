@@ -5,13 +5,10 @@ Brown University
 """
 
 import tensorflow as tf
-from keras.optimizers import Adam
 from keras.layers import \
-    Conv2D, MaxPool2D, Dropout, Flatten, Dense, UpSampling2D, BatchNormalization, ReLU, LeakyReLU
+    Conv2D, MaxPool2D, Flatten, Dense, UpSampling2D, BatchNormalization, LeakyReLU
 import numpy as np
 import hyperparameters as hp
-from skimage.color import lab2rgb
-from matplotlib import pyplot as plt
 
 
 class CNNModel(tf.keras.Model):
@@ -19,9 +16,7 @@ class CNNModel(tf.keras.Model):
 
     def __init__(self):
         super(CNNModel, self).__init__()
-
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-
         self.architecture = [
             Conv2D(filters=64, kernel_size=(3, 3),
                    activation='relu', padding='same'),
@@ -58,7 +53,6 @@ class CNNModel(tf.keras.Model):
             BatchNormalization(),
             MaxPool2D(pool_size=(2, 2)),
 
-
             UpSampling2D(size=(2, 2)),
             Conv2D(filters=256, kernel_size=(3, 3),
                    activation='relu', padding='same'),
@@ -78,7 +72,6 @@ class CNNModel(tf.keras.Model):
             Conv2D(filters=2, kernel_size=(1, 1),
                    activation='relu', padding='same'),
 
-
             Flatten(),
             Dense(units=512, activation="relu"),
             Dense(units=112 * 112 * 2, activation="relu"),
@@ -87,10 +80,8 @@ class CNNModel(tf.keras.Model):
 
     def call(self, x):
         """ Passes input image through the network. """
-
         for layer in self.architecture:
             x = layer(x)
-
         return x
 
     @staticmethod
@@ -104,9 +95,7 @@ class RESCNNModel(tf.keras.Model):
 
     def __init__(self):
         super(RESCNNModel, self).__init__()
-
         self.optimizer = tf.keras.optimizers.SGD()
-
         self.RES = tf.keras.applications.resnet50.ResNet50(
             include_top=False,
             input_shape=(hp.img_size, hp.img_size, 3))
@@ -153,18 +142,15 @@ class RESCNNModel(tf.keras.Model):
     @staticmethod
     def loss_fn(labels, predictions):
         """ Loss function for the model. """
-        # TODO: find new loss function
-        # return tf.keras.losses.MeanSquaredError(labels, predictions)
         return tf.keras.losses.MeanAbsoluteError(labels, predictions)
+
 
 class GeneratorModel(tf.keras.Model):
     """ CNN that uses ResNet """
 
     def __init__(self):
         super(GeneratorModel, self).__init__()
-
         self.optimizer = tf.keras.optimizers.Adam(1e-2)
-
         self.RES = tf.keras.applications.resnet50.ResNet50(
             include_top=False,
             input_shape=(hp.img_size, hp.img_size, 3))
@@ -207,94 +193,6 @@ class GeneratorModel(tf.keras.Model):
         x = self.model(x)
         x = self.head(x)
         return x
-
-
-class GeneratorCNNModel(tf.keras.Model):
-    """ Your own neural network model. """
-
-    def __init__(self):
-        super(GeneratorCNNModel, self).__init__()
-
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-
-        self.architecture = [
-            Conv2D(filters=64, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=64, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            MaxPool2D(pool_size=(2, 2)),
-            Conv2D(filters=128, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=128, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            MaxPool2D(pool_size=(2, 2)),
-            Conv2D(filters=256, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=256, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=256, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            MaxPool2D(pool_size=(2, 2)),
-            Conv2D(filters=512, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=512, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=512, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            MaxPool2D(pool_size=(2, 2)),
-
-
-            UpSampling2D(size=(2, 2)),
-            Conv2D(filters=256, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            UpSampling2D(size=(2, 2)),
-            Conv2D(filters=128, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            UpSampling2D(size=(2, 2)),
-            Conv2D(filters=64, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            UpSampling2D(size=(2, 2)),
-            Conv2D(filters=32, kernel_size=(3, 3),
-                   activation='relu', padding='same'),
-            BatchNormalization(),
-            Conv2D(filters=2, kernel_size=(1, 1),
-                   activation='relu', padding='same'),
-
-
-            Flatten(),
-            Dense(units=512, activation="relu"),
-            Dense(units=112 * 112 * 2, activation="relu"),
-            tf.keras.layers.Reshape((112, 112, 2))
-        ]
-
-        self.head = tf.keras.Sequential(self.architecture)
-
-    def call(self, x):
-        """ Passes input image through the network. """
-
-        # for layer in self.architecture:
-        #     x = layer(x)
-
-        return self.head(x)
-
-    @staticmethod
-    def loss_fn(labels, predictions):
-        """ Loss function for the model. """
-        return tf.keras.losses.MeanSquaredError(labels, predictions)
-
 
 
 class GANModel():
@@ -304,11 +202,7 @@ class GANModel():
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy()
         self.generator_opt = tf.keras.optimizers.Adam(1e-2)
         self.discriminator_opt = tf.keras.optimizers.Adam(1e-2)
-        # self.generator = self.make_generator_model()
-        #self.generator = GeneratorModel()
-        self.generator = GeneratorCNNModel()
-        self.generator(tf.keras.Input(
-          shape=(hp.img_size, hp.img_size, 1)))
+        self.generator = GeneratorModel()
         self.discriminator = self.make_discriminator_model()
 
         self.generator.compile(
@@ -359,10 +253,9 @@ class GANModel():
         return model
 
     def generator_loss(self, fake_out, real_out, prob_fake):
-        #mse = tf.keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
-        cross_entropy_loss = self.cross_entropy(tf.ones_like(prob_fake), prob_fake)
+        cross_entropy_loss = self.cross_entropy(
+            tf.ones_like(prob_fake), prob_fake)
         # Change to mean
-        #mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
         l2 = tf.keras.losses.MeanSquaredError()
         l2 = l2(fake_out, real_out)
         return (0.1 * l2) + cross_entropy_loss
@@ -373,7 +266,7 @@ class GANModel():
         total_loss = real_loss + fake_loss
 
         return total_loss
-    
+
     def train_generator_step(self, L_batch, ab_batch):
         with tf.GradientTape() as g_tape:
             fake_ab = self.generator(L_batch, training=True)
@@ -381,7 +274,6 @@ class GANModel():
             real_LAB = np.concatenate((L_batch, ab_batch), axis=-1)
             fake_LAB = np.concatenate((L_batch, fake_ab), axis=-1)
 
-            #prob_real = self.discriminator(real_LAB, training=True)
             prob_fake = self.discriminator(fake_LAB, training=True)
 
             g_loss = self.generator_loss(fake_ab, ab_batch, prob_fake)
@@ -394,7 +286,7 @@ class GANModel():
             zip(g_grads, self.generator.trainable_variables))
 
         return g_loss
-    
+
     def train_discriminator_step(self, L_batch, ab_batch):
         with tf.GradientTape() as d_tape:
             fake_ab = self.generator(L_batch, training=True)
@@ -416,7 +308,6 @@ class GANModel():
             zip(d_grads, self.discriminator.trainable_variables))
 
         return d_loss
-    
 
     # def train_step(self, L_batch, ab_batch):
     #     with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:

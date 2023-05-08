@@ -16,7 +16,6 @@ import hyperparameters as hp
 
 def plot_to_image(figure):
     """ Converts a pyplot figure to an image tensor. """
-
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
     plt.close(figure)
@@ -46,7 +45,6 @@ class ImageLabelingLogger(tf.keras.callbacks.Callback):
     def log_image_labels(self, epoch_num, logs):
         """ Writes a plot of test images and their predicted labels
         to disk. """
-
         fig = plt.figure(figsize=(9, 9))
         count_all = 0
         count_misclassified = 0
@@ -276,31 +274,3 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
                     min_acc_file = weight_file
 
         return min_acc_file, max_acc_file, min_acc, num_weights
-
-    # def scan_weight_files(self):
-    #     """ Scans checkpoint directory to find current minimum and maximum
-    #     accuracy weights files as well as the number of weights. """
-
-    #     # min_acc = float('inf')
-    #     # max_acc = 0
-    #     min_acc = 0
-    #     max_acc = float('inf')
-    #     min_acc_file = ""
-    #     max_acc_file = ""
-    #     num_weights = 0
-
-    #     files = os.listdir(self.checkpoint_dir)
-
-    #     for weight_file in files:
-    #         if weight_file.endswith(".h5"):
-    #             num_weights += 1
-    #             file_acc = float(re.findall(
-    #                 r"[+-]?\d+\.\d+", weight_file.split("acc")[-1])[0])
-    #             if file_acc > max_acc:
-    #                 max_acc = file_acc
-    #                 max_acc_file = weight_file
-    #             if file_acc < min_acc:
-    #                 min_acc = file_acc
-    #                 min_acc_file = weight_file
-
-    #     return min_acc_file, max_acc_file, max_acc, num_weights

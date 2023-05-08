@@ -7,12 +7,9 @@ Brown University
 from tqdm import tqdm
 import numpy as np
 from matplotlib import pyplot as plt
-from skimage.color import rgba2rgb, rgb2gray, rgb2lab, lab2rgb
-from skimage.io import imread
-from tensorboard_utils import \
-    ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
+from skimage.color import lab2rgb
+from tensorboard_utils import CustomModelSaver
 import os
-import sys
 import argparse
 import re
 from datetime import datetime
@@ -21,7 +18,6 @@ import tensorflow as tf
 import hyperparameters as hp
 from models import CNNModel, GANModel, RESCNNModel
 from preprocess import Datasets
-from skimage.transform import resize
 from tensorflow.python.ops.numpy_ops import np_config
 np_config.enable_numpy_behavior()
 
@@ -80,11 +76,6 @@ def thresholded_loss(y_true, y_pred):
 def train(model, datasets, checkpoint_path, init_epoch):
     """ Training routine. """
     callback_list = [
-        # tf.keras.callbacks.TensorBoard(
-        #     log_dir=logs_path,
-        #     update_freq='batch',
-        #     profile_batch=0),
-        # ImageLabelingLogger(logs_path, datasets),
         CustomModelSaver(checkpoint_path, ARGS.model, hp.max_num_weights)
     ]
 
@@ -123,7 +114,7 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
 
             g_loss = model.train_generator_step(L_batch, ab_batch)
             total_g_loss += g_loss
-        
+
         predictions = model.generator.predict(datasets.train_L)
 
         cur_thresh = thresholded_loss(predictions, datasets.train_ab).numpy()
@@ -143,7 +134,7 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
                 ab_batch = datasets.train_ab[i:]
 
             d_loss = model.train_discriminator_step(L_batch, ab_batch)
-    
+
         # Save checkpoint
         if cur_mse < best_g_loss:
             best_g_loss = cur_mse
@@ -159,6 +150,7 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
     print(mse)
     print(thresh)
 
+
 def test(model, datasets):
     """ Testing routine. """
     model.evaluate(
@@ -166,7 +158,6 @@ def test(model, datasets):
         y=datasets.test_ab,
         verbose=1,
     )
-    #print(model, test_data)
 
 
 def predict(model, datasets):
@@ -195,9 +186,6 @@ def predict(model, datasets):
         plt.show()
         plt.imshow(pred_RGB)
         plt.show()
-
-        # Print real LAB
-        # Print predicted LAB
 
 
 def main():
@@ -242,7 +230,6 @@ def main():
         model.generator(tf.keras.Input(shape=(hp.img_size, hp.img_size, 1)))
         checkpoint_path = "checkpoints" + os.sep + \
             "gen_model" + os.sep + timestamp + os.sep
-
         # Print summary of model
         # model.summary()
 
@@ -286,18 +273,3 @@ def main():
 ARGS = parse_args()
 
 main()
-
-
-# How to show images
-# def main():
-#     datasets = Datasets()
-#     color, gray = datasets.load_data()
-#     color1 = color[0]
-#     gray1 = gray[0]
-#     plt.imshow(color1)
-#     plt.show()
-#     plt.imshow(gray1, cmap="gray")
-#     plt.show()
-
-#     print(color.shape, gray.shape)
-#     return
