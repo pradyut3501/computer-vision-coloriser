@@ -7,8 +7,8 @@ import numpy as np
 import pickle
 import math
 
-DATA_DIR = "../data"
-#DATA_DIR = "../../drive/Shareddrives"
+# DATA_DIR = "../data"
+DATA_DIR = "../../drive/Shareddrives"
 TOTAL_LOADED = 10000  # Limit 99,990
 
 

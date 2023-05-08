@@ -209,6 +209,94 @@ class GeneratorModel(tf.keras.Model):
         return x
 
 
+class GeneratorCNNModel(tf.keras.Model):
+    """ Your own neural network model. """
+
+    def __init__(self):
+        super(GeneratorCNNModel, self).__init__()
+
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+        self.architecture = [
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=128, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=128, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+            Conv2D(filters=512, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=512, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=512, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            MaxPool2D(pool_size=(2, 2)),
+
+
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=256, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=128, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=64, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            UpSampling2D(size=(2, 2)),
+            Conv2D(filters=32, kernel_size=(3, 3),
+                   activation='relu', padding='same'),
+            BatchNormalization(),
+            Conv2D(filters=2, kernel_size=(1, 1),
+                   activation='relu', padding='same'),
+
+
+            Flatten(),
+            Dense(units=512, activation="relu"),
+            Dense(units=112 * 112 * 2, activation="relu"),
+            tf.keras.layers.Reshape((112, 112, 2))
+        ]
+
+        self.head = tf.keras.Sequential(self.architecture)
+
+    def call(self, x):
+        """ Passes input image through the network. """
+
+        # for layer in self.architecture:
+        #     x = layer(x)
+
+        return self.head(x)
+
+    @staticmethod
+    def loss_fn(labels, predictions):
+        """ Loss function for the model. """
+        return tf.keras.losses.MeanSquaredError(labels, predictions)
+
+
+
 class GANModel():
     """ Your own neural network model. """
 
@@ -217,7 +305,10 @@ class GANModel():
         self.generator_opt = tf.keras.optimizers.Adam(1e-2)
         self.discriminator_opt = tf.keras.optimizers.Adam(1e-2)
         # self.generator = self.make_generator_model()
-        self.generator = GeneratorModel()
+        #self.generator = GeneratorModel()
+        self.generator = GeneratorCNNModel()
+        self.generator(tf.keras.Input(
+          shape=(hp.img_size, hp.img_size, 1)))
         self.discriminator = self.make_discriminator_model()
 
         self.generator.compile(
@@ -272,9 +363,9 @@ class GANModel():
         cross_entropy_loss = self.cross_entropy(tf.ones_like(prob_fake), prob_fake)
         # Change to mean
         #mse = tf.keras.losses.MeanAbsoluteError(reduction='sum_over_batch_size')
-        l1 = tf.keras.losses.MeanAbsoluteError()
-        l1 = l1(fake_out, real_out)
-        return l1 + cross_entropy_loss
+        l2 = tf.keras.losses.MeanSquaredError()
+        l2 = l2(fake_out, real_out)
+        return (0.1 * l2) + cross_entropy_loss
 
     def discriminator_loss(self, real_out, fake_out):
         real_loss = self.cross_entropy(tf.ones_like(real_out), real_out)

@@ -145,8 +145,8 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
             d_loss = model.train_discriminator_step(L_batch, ab_batch)
     
         # Save checkpoint
-        if total_g_loss < best_g_loss:
-            best_g_loss = total_g_loss
+        if cur_mse < best_g_loss:
+            best_g_loss = cur_mse
             save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
                 e, best_g_loss)
             save_location = checkpoint_path + os.sep + "gen." + save_name
