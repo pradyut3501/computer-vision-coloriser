@@ -223,7 +223,7 @@ class GANModel():
 
         self.generator.compile(
             optimizer=self.generator_opt,
-            loss=tf.keras.losses.MeanAbsoluteError(),
+            #loss=tf.keras.losses.MeanAbsoluteError(),
             metrics=["mean_squared_error"])
 
     def make_resnet_model(self):
