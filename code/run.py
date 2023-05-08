@@ -119,17 +119,18 @@ def train_gan(model, datasets, checkpoint_path, init_epoch):
                 ab_batch = datasets.train_ab[i:]
 
             g_loss = model.train_generator_step(L_batch, ab_batch)
+            d_loss = model.train_discriminator_step(L_batch, ab_batch)
             total_g_loss += g_loss
         
-        for i in tqdm(range(0, len(datasets.train_L), hp.batch_size)):
-            if i + hp.batch_size < len(datasets.train_L):
-                L_batch = datasets.train_L[i:i + hp.batch_size]
-                ab_batch = datasets.train_ab[i:i + hp.batch_size]
-            else:
-                L_batch = datasets.train_L[i:]
-                ab_batch = datasets.train_ab[i:]
+        # for i in tqdm(range(0, len(datasets.train_L), hp.batch_size)):
+        #     if i + hp.batch_size < len(datasets.train_L):
+        #         L_batch = datasets.train_L[i:i + hp.batch_size]
+        #         ab_batch = datasets.train_ab[i:i + hp.batch_size]
+        #     else:
+        #         L_batch = datasets.train_L[i:]
+        #         ab_batch = datasets.train_ab[i:]
 
-            d_loss = model.train_discriminator_step(L_batch, ab_batch)
+        #     d_loss = model.train_discriminator_step(L_batch, ab_batch)
 
         # Save checkpoint
         if total_g_loss < best_g_loss:
